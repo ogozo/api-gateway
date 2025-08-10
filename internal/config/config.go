@@ -10,6 +10,7 @@ type Config struct {
 	UserServiceURL    string `mapstructure:"USER_SERVICE_URL"`
 	ProductServiceURL string `mapstructure:"PRODUCT_SERVICE_URL"`
 	CartServiceURL    string `mapstructure:"CART_SERVICE_URL"`
+	OrderServiceURL   string `mapstructure:"ORDER_SERVICE_URL"`
 	JWTSecretKey      string `mapstructure:"JWT_SECRET_KEY"`
 }
 

@@ -5,7 +5,7 @@ go 1.24.6
 require (
 	github.com/gofiber/fiber/v2 v2.52.9
 	github.com/golang-jwt/jwt/v4 v4.5.2
-	github.com/ogozo/proto-definitions v0.0.0-20250810175126-26cd15135691
+	github.com/ogozo/proto-definitions v0.0.0-20250810193401-655e316c89a5
 	google.golang.org/grpc v1.74.2
 )
 
