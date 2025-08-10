@@ -13,6 +13,7 @@ import (
 const (
 	userServiceURL    = "localhost:50051"
 	productServiceURL = "localhost:50052"
+	cartServiceURL    = "localhost:50053"
 	httpPort          = ":3000"
 )
 
@@ -20,10 +21,12 @@ func main() {
 	// gRPC istemcilerini başlat
 	userClient := client.InitUserServiceClient(userServiceURL)
 	productClient := client.InitProductServiceClient(productServiceURL)
+	cartClient := client.InitCartServiceClient(cartServiceURL)
 
 	// HTTP handler'larını başlat
 	userHandler := handler.NewUserHandler(userClient)
 	productHandler := handler.NewProductHandler(productClient)
+	cartHandler := handler.NewCartHandler(cartClient)
 
 	app := fiber.New()
 	app.Use(logger.New())
@@ -35,10 +38,16 @@ func main() {
 	v1.Post("/register", userHandler.Register)
 	v1.Post("/login", userHandler.Login)
 
+	// Product Routes
 	products := v1.Group("/products")
-	products.Use(middleware.AuthRequired())
 	products.Get("/:id", productHandler.GetProduct)
-	// products.Post("/", middleware.RoleRequired("ADMIN"), productHandler.CreateProduct)
+	products.Post("/", middleware.AuthRequired(), middleware.RoleRequired("ADMIN"), productHandler.CreateProduct)
+
+	// Cart Routes
+	cart := v1.Group("/cart")
+	cart.Use(middleware.AuthRequired())
+	cart.Get("/", cartHandler.GetCart)
+	cart.Post("/items", cartHandler.AddItemToCart)
 
 	protected := v1.Group("/me")
 	protected.Use(middleware.AuthRequired())
@@ -51,8 +60,7 @@ func main() {
 	})
 
 	log.Printf("API Gateway listening on port %s", httpPort)
-	err := app.Listen(httpPort)
-	if err != nil {
+	if err := app.Listen(httpPort); err != nil {
 		log.Fatalf("failed to start server: %v", err)
 	}
 }

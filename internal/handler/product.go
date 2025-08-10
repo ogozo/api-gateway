@@ -24,3 +24,17 @@ func (h *ProductHandler) GetProduct(c *fiber.Ctx) error {
 
 	return c.JSON(res.Product)
 }
+
+func (h *ProductHandler) CreateProduct(c *fiber.Ctx) error {
+	var req pb.CreateProductRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request"})
+	}
+
+	res, err := h.productClient.CreateProduct(c.Context(), &req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(res.Product)
+}
