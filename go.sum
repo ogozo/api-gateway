@@ -31,6 +31,8 @@ github.com/mattn/go-runewidth v0.0.16 h1:E5ScNMtiwvlvB5paMFdw9p4kSQzbXFikJ5SQO6T
 github.com/mattn/go-runewidth v0.0.16/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=
 github.com/ogozo/proto-definitions v0.0.0-20250810130355-dfdb16bf7c05 h1:kyBEvEEQbi5xYaBdz9O0AnoiabjaqlqY9VtU1rGhx2A=
 github.com/ogozo/proto-definitions v0.0.0-20250810130355-dfdb16bf7c05/go.mod h1:bBiEfy/zSgrbeL+PvHOiGLPGUPRutqiooVOBN8AEul8=
+github.com/ogozo/proto-definitions v0.0.0-20250810175126-26cd15135691 h1:/5JOTfchK/QEO1MFMxr1Ul1omec6J5sLrJb5uOd13XU=
+github.com/ogozo/proto-definitions v0.0.0-20250810175126-26cd15135691/go.mod h1:bBiEfy/zSgrbeL+PvHOiGLPGUPRutqiooVOBN8AEul8=
 github.com/pelletier/go-toml/v2 v2.2.3 h1:YmeHyLY8mFWbdkNWwpr+qIL2bEqT0o95WSdkNHvL12M=
 github.com/pelletier/go-toml/v2 v2.2.3/go.mod h1:MfCQTFTvCcUyyvvwm1+G6H/jORL20Xlb6rzQu9GuUkc=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
