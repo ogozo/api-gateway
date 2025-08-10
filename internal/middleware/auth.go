@@ -6,10 +6,8 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-// JWT için gizli anahtar. Bu service-user'daki ile AYNI OLMALI!
 var jwtSecret = []byte("super-secret-key")
 
-// AuthRequired, bir JWT'nin varlığını ve geçerliliğini kontrol eder.
 func AuthRequired() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		authHeader := c.Get("Authorization")
@@ -41,7 +39,6 @@ func AuthRequired() fiber.Handler {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid token claims"})
 		}
 
-		// Token'dan gelen bilgileri bir sonraki handler'ın kullanabilmesi için context'e ekliyoruz.
 		c.Locals("user_id", claims["user_id"])
 		c.Locals("role", claims["role"])
 
@@ -49,7 +46,6 @@ func AuthRequired() fiber.Handler {
 	}
 }
 
-// RoleRequired, belirli bir role sahip olmayı gerektiren bir middleware'dir.
 func RoleRequired(requiredRole string) fiber.Handler {
     return func(c *fiber.Ctx) error {
         role, ok := c.Locals("role").(string)

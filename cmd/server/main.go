@@ -11,36 +11,39 @@ import (
 )
 
 const (
-	// Bu adresleri daha sonra config'den alacağız
-	userServiceURL = "localhost:50051"
-	httpPort       = ":3000"
+	userServiceURL    = "localhost:50051"
+	productServiceURL = "localhost:50052"
+	httpPort          = ":3000"
 )
 
 func main() {
-	// gRPC istemcisini başlat
+	// gRPC istemcilerini başlat
 	userClient := client.InitUserServiceClient(userServiceURL)
+	productClient := client.InitProductServiceClient(productServiceURL)
 
 	// HTTP handler'larını başlat
 	userHandler := handler.NewUserHandler(userClient)
+	productHandler := handler.NewProductHandler(productClient)
 
-	// Fiber (web server) uygulamasını başlat
 	app := fiber.New()
-	app.Use(logger.New()) // Gelen istekleri logla
+	app.Use(logger.New())
 
-	// Route'ları tanımla
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
 
-	// Public (herkese açık) route'lar
+	// User Routes
 	v1.Post("/register", userHandler.Register)
 	v1.Post("/login", userHandler.Login)
 
-	// Protected (kimlik doğrulaması gerektiren) route'lar
+	products := v1.Group("/products")
+	products.Use(middleware.AuthRequired())
+	products.Get("/:id", productHandler.GetProduct)
+	// products.Post("/", middleware.RoleRequired("ADMIN"), productHandler.CreateProduct)
+
 	protected := v1.Group("/me")
 	protected.Use(middleware.AuthRequired())
 	protected.Get("/profile", userHandler.GetProfile)
 
-	// Admin (sadece admin rolüyle erişilebilen) route örneği
 	admin := v1.Group("/admin")
 	admin.Use(middleware.AuthRequired(), middleware.RoleRequired("ADMIN"))
 	admin.Get("/dashboard", func(c *fiber.Ctx) error {
