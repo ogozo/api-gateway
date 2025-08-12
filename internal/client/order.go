@@ -9,7 +9,7 @@ import (
 )
 
 func InitOrderServiceClient(orderServiceURL string) pb.OrderServiceClient {
-	conn, err := grpc.Dial(orderServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(orderServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("could not connect to order service: %v", err)
 	}

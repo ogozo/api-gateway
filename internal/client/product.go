@@ -9,7 +9,7 @@ import (
 )
 
 func InitProductServiceClient(productServiceURL string) pb.ProductServiceClient {
-	conn, err := grpc.Dial(productServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(productServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("could not connect to product service: %v", err)
 	}

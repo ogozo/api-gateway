@@ -8,9 +8,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-// InitUserServiceClient, user servisine bir gRPC bağlantısı başlatır.
 func InitUserServiceClient(userServiceURL string) pb.UserServiceClient {
-	conn, err := grpc.Dial(userServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(userServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("could not connect to user service: %v", err)
 	}

@@ -9,7 +9,7 @@ import (
 )
 
 func InitCartServiceClient(cartServiceURL string) pb.CartServiceClient {
-	conn, err := grpc.Dial(cartServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(cartServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("could not connect to cart service: %v", err)
 	}
