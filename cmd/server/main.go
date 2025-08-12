@@ -1,20 +1,37 @@
 package main
 
 import (
+	"context"
 	"log"
+	"os"
+	"os/signal"
 
+	"github.com/gofiber/contrib/otelfiber/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/ogozo/api-gateway/internal/client"
 	"github.com/ogozo/api-gateway/internal/config"
 	"github.com/ogozo/api-gateway/internal/handler"
 	"github.com/ogozo/api-gateway/internal/middleware"
+	"github.com/ogozo/api-gateway/internal/observability"
 )
 
 func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
 	config.LoadConfig()
 	cfg := config.AppConfig
 
+	shutdown, err := observability.InitTracerProvider(ctx, cfg.OtelServiceName, cfg.OtelExporterEndpoint)
+	if err != nil {
+		log.Fatalf("failed to initialize tracer provider: %v", err)
+	}
+	defer func() {
+		if err := shutdown(ctx); err != nil {
+			log.Fatalf("failed to shutdown tracer provider: %v", err)
+		}
+	}()
 	// gRPC istemcilerini başlat
 	userClient := client.InitUserServiceClient(cfg.UserServiceURL)
 	productClient := client.InitProductServiceClient(cfg.ProductServiceURL)
@@ -28,6 +45,7 @@ func main() {
 	orderHandler := handler.NewOrderHandler(orderClient, cartClient, productClient)
 
 	app := fiber.New()
+	app.Use(otelfiber.Middleware())
 	app.Use(logger.New())
 
 	api := app.Group("/api")

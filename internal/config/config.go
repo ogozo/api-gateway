@@ -2,19 +2,23 @@ package config
 
 import (
 	"log"
+
 	"github.com/spf13/viper"
 )
 
 type Config struct {
-	HTTPPort          string `mapstructure:"HTTP_PORT"`
-	UserServiceURL    string `mapstructure:"USER_SERVICE_URL"`
-	ProductServiceURL string `mapstructure:"PRODUCT_SERVICE_URL"`
-	CartServiceURL    string `mapstructure:"CART_SERVICE_URL"`
-	OrderServiceURL   string `mapstructure:"ORDER_SERVICE_URL"`
-	JWTSecretKey      string `mapstructure:"JWT_SECRET_KEY"`
+	HTTPPort             string `mapstructure:"HTTP_PORT"`
+	UserServiceURL       string `mapstructure:"USER_SERVICE_URL"`
+	ProductServiceURL    string `mapstructure:"PRODUCT_SERVICE_URL"`
+	CartServiceURL       string `mapstructure:"CART_SERVICE_URL"`
+	OrderServiceURL      string `mapstructure:"ORDER_SERVICE_URL"`
+	JWTSecretKey         string `mapstructure:"JWT_SECRET_KEY"`
+	OtelExporterEndpoint string `mapstructure:"OTEL_EXPORTER_OTLP_ENDPOINT"`
+	OtelServiceName      string `mapstructure:"OTEL_SERVICE_NAME"`
 }
 
 var AppConfig *Config
+
 func LoadConfig() {
 	viper.AddConfigPath(".")
 	viper.SetConfigName(".env")
@@ -24,7 +28,7 @@ func LoadConfig() {
 	if err := viper.ReadInConfig(); err != nil {
 		log.Println("Warning: .env file not found, reading from environment variables")
 	}
-	
+
 	err := viper.Unmarshal(&AppConfig)
 	if err != nil {
 		log.Fatalf("Unable to decode config into struct, %v", err)
