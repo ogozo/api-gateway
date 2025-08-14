@@ -14,6 +14,8 @@ import (
 	"github.com/ogozo/api-gateway/internal/handler"
 	"github.com/ogozo/api-gateway/internal/middleware"
 	"github.com/ogozo/api-gateway/internal/observability"
+	"github.com/ansrivas/fiberprometheus/v2"
+
 )
 
 func main() {
@@ -32,26 +34,28 @@ func main() {
 			log.Fatalf("failed to shutdown tracer provider: %v", err)
 		}
 	}()
-	// gRPC istemcilerini başlat
+
 	userClient := client.InitUserServiceClient(cfg.UserServiceURL)
 	productClient := client.InitProductServiceClient(cfg.ProductServiceURL)
 	cartClient := client.InitCartServiceClient(cfg.CartServiceURL)
 	orderClient := client.InitOrderServiceClient(cfg.OrderServiceURL)
 
-	// HTTP handler'larını başlat
 	userHandler := handler.NewUserHandler(userClient)
 	productHandler := handler.NewProductHandler(productClient)
 	cartHandler := handler.NewCartHandler(cartClient)
 	orderHandler := handler.NewOrderHandler(orderClient, cartClient, productClient)
 
 	app := fiber.New()
+    prometheus := fiberprometheus.New(cfg.OtelServiceName)
+    prometheus.RegisterAt(app, "/metrics")
+    
+	app.Use(prometheus.Middleware)
 	app.Use(otelfiber.Middleware())
 	app.Use(logger.New())
 
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
 
-	// --- Route Tanımlamaları ---
 	v1.Post("/register", userHandler.Register)
 	v1.Post("/login", userHandler.Login)
 
@@ -64,7 +68,6 @@ func main() {
 	cart.Get("/", cartHandler.GetCart)
 	cart.Post("/items", cartHandler.AddItemToCart)
 
-	// CHECKOUT ROUTE'U
 	v1.Post("/checkout", middleware.AuthRequired(cfg.JWTSecretKey), orderHandler.Checkout)
 
 	protected := v1.Group("/me")
