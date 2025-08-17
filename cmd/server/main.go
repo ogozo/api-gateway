@@ -2,36 +2,41 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
 
+	"github.com/ansrivas/fiberprometheus/v2"
 	"github.com/gofiber/contrib/otelfiber/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/ogozo/api-gateway/internal/client"
 	"github.com/ogozo/api-gateway/internal/config"
 	"github.com/ogozo/api-gateway/internal/handler"
+	"github.com/ogozo/api-gateway/internal/logging"
 	"github.com/ogozo/api-gateway/internal/middleware"
 	"github.com/ogozo/api-gateway/internal/observability"
-	"github.com/ansrivas/fiberprometheus/v2"
-
+	"go.uber.org/zap"
 )
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	config.LoadConfig()
-	cfg := config.AppConfig
+	var cfg config.GatewayConfig
+	config.LoadConfig(&cfg)
 
-	shutdown, err := observability.InitTracerProvider(ctx, cfg.OtelServiceName, cfg.OtelExporterEndpoint)
+	logging.Init(cfg.OtelServiceName)
+	defer logging.Sync()
+
+	api_logger := logging.FromContext(ctx)
+
+	shutdown, err := observability.InitTracerProvider(ctx, cfg.OtelServiceName, cfg.OtelExporterEndpoint, api_logger)
 	if err != nil {
-		log.Fatalf("failed to initialize tracer provider: %v", err)
+		api_logger.Fatal("failed to initialize tracer provider", zap.Error(err))
 	}
 	defer func() {
 		if err := shutdown(ctx); err != nil {
-			log.Fatalf("failed to shutdown tracer provider: %v", err)
+			api_logger.Fatal("failed to shutdown tracer provider", zap.Error(err))
 		}
 	}()
 
@@ -46,10 +51,11 @@ func main() {
 	orderHandler := handler.NewOrderHandler(orderClient, cartClient, productClient)
 
 	app := fiber.New()
-    prometheus := fiberprometheus.New(cfg.OtelServiceName)
-    prometheus.RegisterAt(app, "/metrics")
-    
+
+	prometheus := fiberprometheus.New(cfg.OtelServiceName)
+	prometheus.RegisterAt(app, "/metrics")
 	app.Use(prometheus.Middleware)
+
 	app.Use(otelfiber.Middleware())
 	app.Use(logger.New())
 
@@ -80,8 +86,8 @@ func main() {
 		return c.JSON(fiber.Map{"message": "Welcome to the admin dashboard!"})
 	})
 
-	log.Printf("API Gateway listening on port %s", cfg.HTTPPort)
+	api_logger.Info("starting API Gateway", zap.String("port", cfg.HTTPPort))
 	if err := app.Listen(cfg.HTTPPort); err != nil {
-		log.Fatalf("failed to start server: %v", err)
+		api_logger.Fatal("failed to start server", zap.Error(err))
 	}
 }

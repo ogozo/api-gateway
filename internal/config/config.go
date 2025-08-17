@@ -1,12 +1,11 @@
 package config
 
 import (
-	"log"
-
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
-type Config struct {
+type GatewayConfig struct {
 	HTTPPort             string `mapstructure:"HTTP_PORT"`
 	UserServiceURL       string `mapstructure:"USER_SERVICE_URL"`
 	ProductServiceURL    string `mapstructure:"PRODUCT_SERVICE_URL"`
@@ -17,20 +16,23 @@ type Config struct {
 	OtelServiceName      string `mapstructure:"OTEL_SERVICE_NAME"`
 }
 
-var AppConfig *Config
-
-func LoadConfig() {
+func LoadConfig(cfg any) {
 	viper.AddConfigPath(".")
 	viper.SetConfigName(".env")
 	viper.SetConfigType("env")
+
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
-		log.Println("Warning: .env file not found, reading from environment variables")
+		tempLogger, _ := zap.NewProduction()
+		defer tempLogger.Sync()
+		tempLogger.Warn(".env file not found, reading from environment variables")
 	}
 
-	err := viper.Unmarshal(&AppConfig)
+	err := viper.Unmarshal(&cfg)
 	if err != nil {
-		log.Fatalf("Unable to decode config into struct, %v", err)
+		tempLogger, _ := zap.NewProduction()
+		defer tempLogger.Sync()
+		tempLogger.Fatal("Unable to decode config into struct", zap.Error(err))
 	}
 }

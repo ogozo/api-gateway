@@ -1,12 +1,12 @@
 package handler
 
 import (
-	"log"
-
+	"github.com/gofiber/fiber/v2"
+	"github.com/ogozo/api-gateway/internal/logging"
 	pb_cart "github.com/ogozo/proto-definitions/gen/go/cart"
 	pb_order "github.com/ogozo/proto-definitions/gen/go/order"
 	pb_prod "github.com/ogozo/proto-definitions/gen/go/product"
-	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
 )
 
 type OrderHandler struct {
@@ -28,7 +28,7 @@ func (h *OrderHandler) Checkout(c *fiber.Ctx) error {
 
 	cartRes, err := h.cartClient.GetCart(c.UserContext(), &pb_cart.GetCartRequest{UserId: userID})
 	if err != nil {
-		log.Printf("Error getting cart for user %s: %v", userID, err)
+		logging.Error(c.UserContext(), "failed to get cart for checkout", err, zap.String("user_id", userID))
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "could not retrieve cart"})
 	}
 	if len(cartRes.Items) == 0 {
@@ -40,7 +40,7 @@ func (h *OrderHandler) Checkout(c *fiber.Ctx) error {
 		prodReq := &pb_prod.GetProductRequest{ProductId: cartItem.ProductId}
 		prodRes, err := h.productClient.GetProduct(c.UserContext(), prodReq)
 		if err != nil {
-			log.Printf("Error validating product price for product %s: %v", cartItem.ProductId, err)
+			logging.Error(c.UserContext(), "failed to validate product price for checkout", err, zap.String("product_id", cartItem.ProductId))
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "could not validate product price"})
 		}
 
@@ -57,7 +57,7 @@ func (h *OrderHandler) Checkout(c *fiber.Ctx) error {
 	}
 	orderRes, err := h.orderClient.CreateOrder(c.UserContext(), orderReq)
 	if err != nil {
-		log.Printf("Error creating order for user %s: %v", userID, err)
+		logging.Error(c.UserContext(), "failed to create order", err, zap.String("user_id", userID))
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "could not create order"})
 	}
 
